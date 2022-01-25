@@ -37,6 +37,18 @@ def login_required_admin(f):
 
     return wrap
 
+    
+def login_required_user(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in_user' in session:
+            return f(*args, **kwargs)
+        else:
+            flash("You are not Admin")
+            return redirect(url_for('index'))
+
+    return wrap
+
 #MODALS
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -59,11 +71,11 @@ def index():
             session['logged_in'] = True
             return redirect(url_for('welcome'))
         else:
+            session['logged_in_user'] = True
             return redirect(url_for('user'))
     return render_template('index.html')
 
 @app.route('/welcome')
-@login_required
 @login_required_admin
 def welcome():
     return render_template('welcome.html')
@@ -79,7 +91,7 @@ def logout():
     return redirect(url_for('index'))
     
 @app.route('/user')
-@login_required
+@login_required_user
 def user():
     return "You are a user"
 if __name__ == '__main__':
